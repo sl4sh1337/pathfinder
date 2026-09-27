@@ -1,0 +1,24 @@
+<Window x:Class="Pathfinder.App.Dialogs.InputDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStartupLocation="CenterOwner"
+        Style="{StaticResource DialogWindow}">
+    <StackPanel Margin="22,18,22,16" Width="340">
+        <TextBlock x:Name="PromptText" TextWrapping="Wrap" Margin="0,0,0,10"
+                   Foreground="{StaticResource InkBrush}" />
+        <TextBox x:Name="ValueBox" Padding="6,5" FontSize="14"
+                 FontFamily="{StaticResource MonoFont}"
+                 BorderBrush="{StaticResource BorderBrush}"
+                 TextChanged="ValueBox_TextChanged" />
+        <TextBlock x:Name="ErrorText" TextWrapping="Wrap" Margin="0,6,0,0" MinHeight="18"
+                   FontSize="12" Foreground="{StaticResource DangerBrush}" />
+        <DockPanel Margin="0,12,0,0" LastChildFill="False">
+            <Button x:Name="DeleteButton" DockPanel.Dock="Left" Content="Удалить"
+                    Style="{StaticResource DangerButton}" Visibility="Collapsed" Click="Delete_Click" />
+            <Button DockPanel.Dock="Right" Content="Отмена" IsCancel="True" MinWidth="86" Margin="6,0,0,0"
+                    Style="{StaticResource ToolButton}" />
+            <Button x:Name="OkButton" DockPanel.Dock="Right" Content="OK" IsDefault="True" MinWidth="86"
+                    Style="{StaticResource AccentButton}" Click="Ok_Click" />
+        </DockPanel>
+    </StackPanel>
+</Window>

@@ -1,0 +1,21 @@
+<Window x:Class="Pathfinder.App.Dialogs.SelectVertexDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Начальная вершина"
+        WindowStartupLocation="CenterOwner"
+        Style="{StaticResource DialogWindow}">
+    <StackPanel Margin="22,18,22,16" Width="340">
+        <TextBlock x:Name="AlgorithmText" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,4"
+                   Foreground="{StaticResource InkBrush}" />
+        <TextBlock Text="Выберите вершину, из которой будут искаться кратчайшие пути до всех остальных вершин."
+                   TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,12" />
+        <ComboBox x:Name="VertexBox" Padding="6,5" FontSize="14" FontFamily="{StaticResource MonoFont}"
+                  DisplayMemberPath="Name" />
+        <DockPanel Margin="0,16,0,0" LastChildFill="False">
+            <Button DockPanel.Dock="Right" Content="Отмена" IsCancel="True" MinWidth="86" Margin="6,0,0,0"
+                    Style="{StaticResource ToolButton}" />
+            <Button x:Name="StartButton" DockPanel.Dock="Right" Content="Запустить" IsDefault="True" MinWidth="96"
+                    Style="{StaticResource AccentButton}" Click="Start_Click" />
+        </DockPanel>
+    </StackPanel>
+</Window>

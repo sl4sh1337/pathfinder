@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AssemblyName>Pathfinder</AssemblyName>
+    <Product>Программа нахождения кратчайшего пути в графе</Product>
+    <AssemblyTitle>A Program for Finding Shortest Path in a Graph</AssemblyTitle>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Pathfinder.Core\Pathfinder.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Samples\**\*.graph" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

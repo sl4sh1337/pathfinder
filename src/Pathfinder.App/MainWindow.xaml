@@ -1,0 +1,204 @@
+<Window x:Class="Pathfinder.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:Pathfinder.App.Controls"
+        Title="Кратчайший путь в графе"
+        Width="1280" Height="800" MinWidth="960" MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource ChromeBrush}"
+        FontFamily="Segoe UI" FontSize="13"
+        Foreground="{StaticResource InkBrush}"
+        Closing="Window_Closing">
+    <Window.CommandBindings>
+        <CommandBinding Command="ApplicationCommands.New" Executed="New_Executed" />
+        <CommandBinding Command="ApplicationCommands.Open" Executed="Open_Executed" />
+        <CommandBinding Command="ApplicationCommands.Save" Executed="Save_Executed" />
+        <CommandBinding Command="ApplicationCommands.SaveAs" Executed="SaveAs_Executed" />
+    </Window.CommandBindings>
+    <Window.InputBindings>
+        <KeyBinding Command="ApplicationCommands.SaveAs" Gesture="Ctrl+Shift+S" />
+    </Window.InputBindings>
+
+    <DockPanel>
+        <Menu DockPanel.Dock="Top" Background="{StaticResource ChromeBrush}" Padding="4,2">
+            <MenuItem Header="_Файл">
+                <MenuItem Header="_Новый граф" Command="ApplicationCommands.New" InputGestureText="Ctrl+N" />
+                <MenuItem Header="_Открыть…" Command="ApplicationCommands.Open" InputGestureText="Ctrl+O" />
+                <MenuItem Header="_Сохранить" Command="ApplicationCommands.Save" InputGestureText="Ctrl+S" />
+                <MenuItem Header="Сохранить _как…" Command="ApplicationCommands.SaveAs" InputGestureText="Ctrl+Shift+S" />
+                <Separator />
+                <MenuItem Header="_Выход" Click="Exit_Click" />
+            </MenuItem>
+            <MenuItem Header="_Вид">
+                <MenuItem Header="Показать _весь граф" Click="FitToView_Click" />
+                <MenuItem Header="_Увеличить" Click="ZoomIn_Click" />
+                <MenuItem Header="У_меньшить" Click="ZoomOut_Click" />
+                <Separator />
+                <MenuItem x:Name="LegendMenuItem" Header="_Обозначения" IsCheckable="True" IsChecked="True"
+                          Click="LegendMenuItem_Click" />
+            </MenuItem>
+            <MenuItem Header="_Справка">
+                <MenuItem Header="_Формат файла" Click="FileFormatHelp_Click" />
+                <MenuItem Header="_О программе" Click="About_Click" />
+            </MenuItem>
+        </Menu>
+
+        <!-- Toolbar -->
+        <Border DockPanel.Dock="Top" Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1">
+            <WrapPanel Margin="10,6">
+                <Border Background="{StaticResource ChromeBrush}" CornerRadius="7" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="EditModeRadio" Content="✎  Редактирование" GroupName="Mode" IsChecked="True"
+                                     Style="{StaticResource SegmentRadio}" Checked="Mode_Checked"
+                                     ToolTip="Клик по пустому месту — новая вершина, протяжка от вершины к вершине — новое ребро" />
+                        <RadioButton x:Name="MoveModeRadio" Content="✥  Перемещение" GroupName="Mode"
+                                     Style="{StaticResource SegmentRadio}" Checked="Mode_Checked"
+                                     ToolTip="Перетаскивайте вершины и поле" />
+                    </StackPanel>
+                </Border>
+
+                <Rectangle Style="{StaticResource ToolbarDivider}" />
+                <Button x:Name="DijkstraButton" Content="▶  Дейкстра" Style="{StaticResource AccentButton}"
+                        Margin="0,0,6,0" Click="Dijkstra_Click" />
+                <Button x:Name="BellmanFordButton" Content="▶  Беллман–Форд" Style="{StaticResource AccentButton}"
+                        Click="BellmanFord_Click" />
+
+                <Rectangle Style="{StaticResource ToolbarDivider}" />
+                <Button x:Name="PauseButton" Content="❚❚  Пауза" Style="{StaticResource ToolButton}"
+                        Click="Pause_Click" ToolTip="Приостановить или продолжить анимацию" />
+                <Button x:Name="StepButton" Content="⏵|  Шаг" Style="{StaticResource ToolButton}"
+                        Click="Step_Click" ToolTip="Выполнить один шаг (на паузе)" />
+                <Button x:Name="SkipButton" Content="⏭  В конец" Style="{StaticResource ToolButton}"
+                        Click="Skip_Click" ToolTip="Сразу показать результат" />
+                <Button x:Name="ResetButton" Content="↺  Сброс" Style="{StaticResource ToolButton}"
+                        Click="Reset_Click" ToolTip="Остановить алгоритм и убрать разметку" />
+
+                <Rectangle Style="{StaticResource ToolbarDivider}" />
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="СКОРОСТЬ" Style="{StaticResource SectionLabel}" />
+                    <Slider x:Name="SpeedSlider" Width="110" Minimum="0" Maximum="100" Value="45"
+                            VerticalAlignment="Center" ValueChanged="SpeedSlider_ValueChanged"
+                            ToolTip="Задержка между шагами анимации" />
+                    <TextBlock x:Name="SpeedText" Width="70" Margin="8,0,0,0" VerticalAlignment="Center"
+                               FontFamily="{StaticResource MonoFont}" FontSize="12"
+                               Foreground="{StaticResource MutedBrush}" />
+                </StackPanel>
+            </WrapPanel>
+        </Border>
+
+        <!-- Status bar -->
+        <Border DockPanel.Dock="Bottom" Background="{StaticResource ChromeBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="12,5">
+            <DockPanel>
+                <TextBlock x:Name="GraphInfoText" DockPanel.Dock="Right" Foreground="{StaticResource MutedBrush}"
+                           FontFamily="{StaticResource MonoFont}" FontSize="12" />
+                <TextBlock x:Name="HintText" Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis" />
+            </DockPanel>
+        </Border>
+
+        <!-- Side panel -->
+        <Border DockPanel.Dock="Right" Width="360" Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1,0,0,0">
+            <Grid Margin="14,12,14,12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <TextBlock x:Name="AlgorithmTitle" Text="Алгоритм не запущен" FontSize="18" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="1" x:Name="ProgressText" Margin="0,2,0,10" Foreground="{StaticResource MutedBrush}"
+                           Text="Постройте граф и выберите алгоритм на панели сверху." TextWrapping="Wrap" />
+
+                <ListBox Grid.Row="2" x:Name="LogList" BorderBrush="{StaticResource BorderBrush}"
+                         Background="{StaticResource SurfaceBrush}" FontSize="12"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         VirtualizingPanel.IsVirtualizing="True">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Text}" TextWrapping="Wrap" Margin="0,2" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <TextBlock Grid.Row="3" Text="КРАТЧАЙШИЕ ПУТИ" Style="{StaticResource SectionLabel}" Margin="0,14,0,6" />
+                <DataGrid Grid.Row="4" x:Name="ResultGrid" AutoGenerateColumns="False" IsReadOnly="True"
+                          HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="{StaticResource BorderBrush}"
+                          BorderBrush="{StaticResource BorderBrush}" Background="{StaticResource SurfaceBrush}"
+                          RowBackground="{StaticResource SurfaceBrush}" SelectionMode="Single"
+                          CanUserResizeRows="False" FontSize="12"
+                          SelectionChanged="ResultGrid_SelectionChanged">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Вершина" Binding="{Binding Vertex}" Width="Auto">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Margin" Value="4,0,8,0" />
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Расстояние" Binding="{Binding Distance}" Width="Auto">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+                                    <Setter Property="HorizontalAlignment" Value="Right" />
+                                    <Setter Property="Margin" Value="6,0,10,0" />
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Путь" Binding="{Binding Path}" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextWrapping" Value="Wrap" />
+                                    <Setter Property="Margin" Value="4,0" />
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+
+        <!-- Canvas with the legend floating over it -->
+        <Grid>
+            <controls:GraphCanvas x:Name="GraphView" />
+
+            <Border x:Name="Legend" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="14"
+                    Background="#EEFBF9F4" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="8" Padding="12,8" IsHitTestVisible="False">
+                <StackPanel>
+                    <TextBlock Text="ОБОЗНАЧЕНИЯ" Style="{StaticResource SectionLabel}" Margin="0,0,0,4" />
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <Ellipse Width="11" Height="11" Fill="#CCEAE6" Stroke="#0F766E" StrokeThickness="2" />
+                        <TextBlock Text="  начальная вершина, дерево путей" FontSize="12" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <Ellipse Width="11" Height="11" Fill="#FCE7C4" Stroke="#D97706" StrokeThickness="2" />
+                        <TextBlock Text="  обрабатываемая вершина" FontSize="12" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <Rectangle Width="11" Height="3" Fill="#15803D" VerticalAlignment="Center" />
+                        <TextBlock Text="  метка улучшена   " FontSize="12" />
+                        <Rectangle Width="11" Height="3" Fill="#B91C1C" VerticalAlignment="Center" />
+                        <TextBlock Text="  не улучшена" FontSize="12" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <Ellipse Width="11" Height="11" Fill="#DCE4EE" Stroke="#1F2430" StrokeThickness="1.5" />
+                        <TextBlock Text="  расстояние окончательно" FontSize="12" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <Rectangle Width="11" Height="3" Fill="#E11D48" VerticalAlignment="Center" />
+                        <TextBlock Text="  кратчайший путь (наведите на вершину)" FontSize="12" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <Ellipse Width="11" Height="11" Fill="#EDE4FE" Stroke="#7C3AED" StrokeThickness="2" />
+                        <TextBlock Text="  за циклом отрицательного веса" FontSize="12" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </DockPanel>
+</Window>
